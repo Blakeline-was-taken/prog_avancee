@@ -158,3 +158,98 @@ pi = 4 * n_cible / n_tot;
 - **Scalabilité :** La charge est répartie uniformément entre les Workers, ce qui peut améliorer les performances sur un grand nombre de threads. Nous testerons cela dans la **IVème partie**.
 - **Modularité :** La structure facilite l’adaptation à des architectures distribuées, où les Workers peuvent s’exécuter sur des machines distinctes. Nous testerons cela dans la **VIIème partie**.
 
+## **III. Mise en œuvre sur Machine**
+
+Nous allons maintenant étudier deux implémentations pratiques de la méthode de Monte Carlo pour le calcul de π. L'objectif est d'analyser leur structure et leur approche de parallélisation :
+
+1. Identifier le **modèle de programmation parallèle** utilisé dans chaque code ainsi que le **paradigme suivi** (itération parallèle ou Master/Worker).
+2. Vérifier si ces implémentations correspondent aux algorithmes proposés en **partie II**.
+
+Nous effectuerons ensuite dans la **partie IV** une analyse détaillée de chaque code en évaluant leur scalabilité forte et faible.
+
+### **A. Analyse Assignment102**
+
+L'implémentation **Assignment102** utilise l'API Concurrent pour paralléliser les calculs nécessaires à l'estimation de π avec la méthode de Monte Carlo. Voici les points principaux analysés :
+
+#### **Structure et API utilisée**
+
+![DiagrammeClasse_Assignment102](img/DiagrammeClasse_Assignment102.png)
+
+- **Gestion des threads :**
+    - Le code utilise `ExecutorService` avec un **pool de threads adaptatif** (`newWorkStealingPool`), exploitant efficacement les cœurs disponibles sur la machine.
+    - Chaque tirage (génération d’un point aléatoire) est exécuté dans une tâche indépendante via `Runnable`.
+- **Synchronisation avec AtomicInteger :**
+    - La variable partagée `nAtomSuccess`, qui compte le nombre de points dans le quart de disque, est protégée par un **compteur atomique** (`AtomicInteger`) pour éviter les conflits d’accès entre threads.
+
+#### **Modèle de programmation parallèle et paradigme**
+
+- **Modèle utilisé :** Itération parallèle. Chaque tirage correspond à une tâche indépendante soumise au pool de threads.
+- **Paradigme :** Le code suit le modèle d’**itération parallèle** décrit dans la partie II.A. Chaque tâche effectue un tirage de manière indépendante, sans dépendances entre elles.
+
+#### **Lien avec notre pseudo-code**
+
+L'implémentation correspond globalement au pseudo-code d'**itération parallèle** proposé, avec les adaptations suivantes :
+- Le compteur `n_cible` est remplacé par un `AtomicInteger` pour gérer les sections critiques.
+- Le découplage des threads est entièrement géré par l’API `ExecutorService`.
+
+#### **Limites et optimisation possibles**
+
+1. **Impact des accès atomiques :**
+    - Chaque incrémentation de `nAtomSuccess` via `incrementAndGet()` est coûteuse en termes de synchronisation, ce qui peut provoquer des **goulots d’étranglement**. On parle presque de **75% du temps d'exécution** pouvant être consacré uniquement à la gestion des accès atomiques.
+
+2. **Optimisation possible :**
+    - **Regroupement local :** Chaque thread pourrait maintenir un compteur local pour `nAtomSuccess`, et ces valeurs pourraient être agrégées à la fin, réduisant la contention.
+    - **Filtrage des points hors cible :** Plutôt que d'incrémenter le compteur atomique à chaque point DANS la cible, on pourrait le faire quand ils sont en dehors, et simplement prendre la valeur inverse de la variable pour le calcul de Pi.
+
+En conclusion, bien que cette implémentation soit correcte et facilement compréhensible, elle est limitée par des problèmes d’optimisation liés à la synchronisation atomique.
+
+### **B. Analyse Pi.java**
+
+L'implémentation **Pi.java** repose sur l'utilisation des **Futures** et des **Callables** pour paralléliser le calcul de π à l'aide de la méthode de Monte Carlo.
+
+#### **Qu’est-ce qu’un `Future` ?**
+
+Un `Future` est un conteneur pour un résultat calculé de manière asynchrone. Il permet :
+- **De soumettre une tâche :** Lorsqu'une tâche est exécutée par un thread, son résultat est encapsulé dans un `Future`.
+- **De récupérer le résultat :** L'appel à `get()` permet de récupérer la valeur, mais bloque jusqu'à ce que le calcul soit terminé. Cela introduit une **barrière implicite** qui synchronise les résultats des différents threads.
+- **De vérifier l'état d'exécution :** Un `Future` peut également indiquer si la tâche est terminée ou si elle a échoué.
+
+Ici, les `Futures` permettent de gérer la synchronisation entre les threads de manière simple et efficace, en garantissant que chaque résultat partiel est prêt avant l'agrégation.
+
+![DiagrammeClasse_Pi](img/DiagrammeClasse_Pi.png)
+
+#### **Modèle de programmation parallèle et paradigme**
+
+- **Modèle utilisé :** Master/Worker. Le **Master** crée des `Workers` (tâches) pour effectuer les calculs de Monte Carlo, et il regroupe les résultats des `Futures` pour produire le résultat final.
+- **Paradigme :** Basé sur les tâches avec gestion explicite des tâches via des `Callables`.
+
+#### **Structure et API utilisée**
+
+1. **Parallélisation avec des `Callables` :**
+    - Chaque `Worker` est implémenté comme un `Callable<Long>` qui effectue un sous-ensemble du calcul total, à savoir déterminer le nombre de points tombant dans le quart de disque pour un certain nombre d'itérations.
+    - Ces `Callables` sont ensuite exécutés par un pool de threads fixe (`FixedThreadPool`), permettant leur exécution en parallèle.
+
+2. **Gestion des résultats avec des `Futures` :**
+    - Lorsqu'un `Callable` est soumis au pool de threads, il renvoie un objet `Future<Long>` qui représente un résultat futur.
+    - L'appel à `Future.get()` bloque le thread principal jusqu'à ce que le calcul associé au `Callable` soit terminé.
+    - Une fois tous les résultats collectés, ils sont agrégés pour calculer la valeur finale de π.
+
+#### **Lien avec notre pseudo-code**
+
+L'algorithme suit fidèlement la logique **Master/Worker** définie en partie II.B :
+- **Master :** Correspond à la classe `Master`, qui distribue les tâches aux `Workers` et agrège leurs résultats.
+- **Workers :** Implémentés via les `Callables`, chaque `Worker` exécute localement la méthode `MCWorker()` de notre pseudo-code.
+- **Division équitable :** Le `Master` divise uniformément les tirages (`n_charge`) entre les différents `Workers`.
+
+#### **Comparaison avec Assignment102**
+
+1. **Isolation des calculs :**
+    - Chaque `Worker` calcule ses résultats localement sans dépendre d’une variable partagée, ce qui élimine le besoin d’outils comme `AtomicInteger`.
+
+2. **Moins de synchronisation coûteuse :**
+    - Le recours aux `Futures` permet de retarder la synchronisation jusqu'à l'agrégation finale, réduisant les coûts liés à l'accès concurrent.
+
+3. **Efficacité :**
+    - En minimisant la gestion des ressources partagées et en optimisant l'utilisation des threads, cette implémentation est mieux adaptée aux environnements multithread, en particulier sur des machines multicœurs.
+
+On peut donc s'attendre à de meilleures performances qu'`Assignment102` au moment au test de performances, particulièrement avec un grand nombre de points et de threads.
