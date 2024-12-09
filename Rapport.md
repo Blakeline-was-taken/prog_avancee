@@ -243,13 +243,223 @@ L'algorithme suit fidèlement la logique **Master/Worker** définie en partie II
 
 #### **Comparaison avec Assignment102**
 
-1. **Isolation des calculs :**
-    - Chaque `Worker` calcule ses résultats localement sans dépendre d’une variable partagée, ce qui élimine le besoin d’outils comme `AtomicInteger`.
+1. **Isolation des calculs :** Chaque `Worker` calcule ses résultats localement sans dépendre d’une variable partagée, ce qui élimine le besoin d’outils comme `AtomicInteger`.
 
-2. **Moins de synchronisation coûteuse :**
-    - Le recours aux `Futures` permet de retarder la synchronisation jusqu'à l'agrégation finale, réduisant les coûts liés à l'accès concurrent.
+2. **Moins de synchronisation coûteuse :** Le recours aux `Futures` permet de retarder la synchronisation jusqu'à l'agrégation finale, réduisant les coûts liés à l'accès concurrent.
 
-3. **Efficacité :**
-    - En minimisant la gestion des ressources partagées et en optimisant l'utilisation des threads, cette implémentation est mieux adaptée aux environnements multithread, en particulier sur des machines multicœurs.
+3. **Efficacité :** En minimisant la gestion des ressources partagées et en optimisant l'utilisation des threads, cette implémentation est mieux adaptée aux environnements multithread, en particulier sur des machines multicœurs.
 
 On peut donc s'attendre à de meilleures performances qu'`Assignment102` au moment au test de performances, particulièrement avec un grand nombre de points et de threads.
+
+## IV. Évaluations et tests de performances
+
+La partie suivante vient directement d'un autre rapport que j'écris en parallèle de celui-ci, qui concerne le module de Qualité de Développement en troisième année de BUT informatique.
+
+L'ordinateur qui a réalisé ces calculs possède les specs suivantes :
+- **Processeur :** 11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz
+- 8 cœurs physiques
+- 16 cœurs logiques
+
+Notez que les résultats des tests qui suivent ne seront pas les mêmes selon l'architecture matérielle sur lesquels ils ont été effectués.
+
+### **A. Programme de calcul de performance**
+
+Le script PerformanceTester.java teste différentes implémentations de Monte Carlo pour calculer π en s'appuyant sur une interface standardisée (`MonteCarloImplementation`). Chaque implémentation doit fournir deux méthodes : `execute(int totalPoints, int numCores)` et `getName()`.
+
+Il récupère les données de tests (nombre de cœurs, de points, et répétitions) dans un fichier csv, effectue les tests sur chaque implémentation puis enregistre les résultats (temps d'exécution, approximation de π, erreur relative) dans un fichier `resultats.csv`.
+
+L'outil est modulaire, permettant d'ajouter facilement de nouvelles versions de Monte Carlo à tester, tout en automatisant l'évaluation des performances pour différents scénarios.
+
+### **B. Tests de Scalabilité**
+
+Nous allons réaliser les mêmes tests sur tous les codes, afin de pouvoir les comparer plus efficacement.  On compare les performances des différents codes en termes de scalabilité, en évaluant leur capacité à s'adapter à une augmentation du nombre de cœurs, selon deux approches : **scalabilité forte** et **scalabilité faible**.
+
+#### **1. Scalabilité Forte**
+
+La **scalabilité forte** mesure la capacité d'un programme à réduire son temps d'exécution lorsqu'on augmente le nombre de cœurs, tout en maintenant la charge de travail totale constante. Elle évalue comment le programme exploite efficacement les ressources supplémentaires.
+
+On l'évalue à l'aide du **speedup**, défini comme :
+
+```
+Speedup = Temps_1_cœur / Temps_N_cœurs
+```
+
+Un speedup idéal est linéaire (e.g., un gain proportionnel au nombre de cœurs).
+
+![Speedup_Scalabilité_Forte](img/SpeedupScalabiliteForte.png)
+
+Pour la scalabilité forte, on maintient la charge totale constante (le nombre de points) tout en augmentant le nombre de processeurs. Les expériences se répartissent comme suit :
+
+| **Nombre de processeurs** | **Nombre total de points** | **Points par processeur** |  
+|---------------------------|----------------------------|---------------------------|  
+| 1                         | 1,000,000                  | 1,000,000                 |  
+| 2                         | 1,000,000                  | 500,000                   |  
+| 4                         | 1,000,000                  | 250,000                   |  
+| 8                         | 1,000,000                  | 125,000                   |  
+| 16                        | 1,000,000                  | 62,500                    |  
+| 1                         | 10,000,000                 | 10,000,000                |  
+| 2                         | 10,000,000                 | 5,000,000                 |  
+| 4                         | 10,000,000                 | 2,500,000                 |  
+| 8                         | 10,000,000                 | 1,250,000                 |  
+| 16                        | 10,000,000                 | 625,000                   |  
+| 1                         | 100,000,000                | 100,000,000               |  
+| 2                         | 100,000,000                | 50,000,000                |  
+| 4                         | 100,000,000                | 25,000,000                |  
+| 8                         | 100,000,000                | 12,500,000                |  
+| 16                        | 100,000,000                | 6,250,000                 |  
+
+#### **2. Scalabilité Faible**
+
+La **scalabilité faible** évalue la capacité d'un programme à maintenir un temps d'exécution constant lorsqu'on augmente proportionnellement le nombre de cœurs **et** la charge de travail totale. Cela simule un scénario où chaque cœur traite une part fixe de travail supplémentaire.
+
+Elle est également mesurée à l'aide du **speedup**, calculé comme dans la scalabilité forte, mais ici avec une charge croissante. Ici, le speedup idéal est constant, une droite qui reste horizontale.
+
+Pour la scalabilité faible, on augmente proportionnellement la charge totale en fonction du nombre de processeurs, de façon à maintenir une charge constante par processeur. Les expériences se répartissent comme suit :
+
+| **Nombre de processeurs** | **Nombre total de points** | **Points par processeur** |  
+|---------------------------|----------------------------|---------------------------|  
+| 1                         | 1,000,000                  | 1,000,000                 |  
+| 2                         | 2,000,000                  | 1,000,000                 |  
+| 4                         | 4,000,000                  | 1,000,000                 |  
+| 8                         | 8,000,000                  | 1,000,000                 |  
+| 16                        | 16,000,000                 | 1,000,000                 |  
+| 1                         | 10,000,000                 | 10,000,000                |  
+| 2                         | 20,000,000                 | 10,000,000                |  
+| 4                         | 40,000,000                 | 10,000,000                |  
+| 8                         | 80,000,000                 | 10,000,000                |  
+| 16                        | 160,000,000                | 10,000,000                |  
+| 1                         | 100,000,000                | 100,000,000               |  
+| 2                         | 200,000,000                | 100,000,000               |  
+| 4                         | 400,000,000                | 100,000,000               |  
+| 8                         | 800,000,000                | 100,000,000               |  
+| 16                        | 1,600,000,000              | 100,000,000               |  
+
+### **C. Résultats Assignment102**
+
+Pour évaluer la scalabilité de l'implémentation `Assignment102`, nous avons modifié le code pour permettre de fixer le nombre de processeurs utilisés via l'initialisation de la classe `PiMonteCarlo`. Cela remplace l'utilisation dynamique de `Runtime.getRuntime().availableProcessors()` et nous permet de limiter précisément le nombre de cœurs pour chaque test.
+
+Voici les résultats obtenus lors des tests de scalabilité forte, répétés 5 fois pour avoir une moyenne :
+
+#### **Tableau des résultats de scalabilité forte**
+
+| **Nombre de cœurs** | **Points lancés** | **Points par cœur** | **Temps d'exécution (ms)** | **Approximation de π** | **Erreur**          |  
+|---------------------|-------------------|---------------------|----------------------------|------------------------|---------------------|
+| 1                   | 1,000,000         | 1,000,000           | 92.0                       | 3.1414976              | 3.03 × 10⁻⁵         |  
+| 2                   | 1,000,000         | 500,000             | 84.2                       | 3.1398992              | 5.39 × 10⁻⁴         |  
+| 4                   | 1,000,000         | 250,000             | 92.6                       | 3.14152                | 2.31 × 10⁻⁵         |  
+| 8                   | 1,000,000         | 125,000             | 126.2                      | 3.1420408              | 1.43 × 10⁻⁴         |  
+| 16                  | 1,000,000         | 62,500              | 127.2                      | 3.1411                 | 1.57 × 10⁻⁴         |  
+| 1                   | 10,000,000        | 10,000,000          | 836.8                      | 3.14186112             | 8.55 × 10⁻⁵         |  
+| 2                   | 10,000,000        | 5,000,000           | 206.4                      | 3.14125008             | 1.09 × 10⁻⁴         |  
+| 4                   | 10,000,000        | 2,500,000           | 819.8                      | 3.14155624             | 1.16 × 10⁻⁵         |  
+| 8                   | 10,000,000        | 1,250,000           | 869.0                      | 3.1418644              | 8.65 × 10⁻⁵         |  
+| 16                  | 10,000,000        | 625,000             | 925.4                      | 3.14146304             | 4.13 × 10⁻⁵         |  
+| 1                   | 100,000,000       | 100,000,000         | 8,788.0                    | 3.141590984            | 5.31 × 10⁻⁷         |  
+| 2                   | 100,000,000       | 50,000,000          | 8,358.2                    | 3.141534816            | 1.84 × 10⁻⁵         |  
+| 4                   | 100,000,000       | 25,000,000          | 8,743.0                    | 3.141645944            | 1.70 × 10⁻⁵         |  
+| 8                   | 100,000,000       | 12,500,000          | 8,728.4                    | 3.141609744            | 5.44 × 10⁻⁶         |  
+| 16                  | 100,000,000       | 6,250,000           | 8,625.2                    | 3.1416518              | 1.88 × 10⁻⁵         |  
+
+En utilisant un programme Python pour calculer le speedup et générer un graphique, on obtient la courbe suivante :
+
+![Scalabilité forte Assignment102](plot/scalabilite_forte_Assignment102_10000000.png)
+
+L'analyse des résultats montre que le speedup commence à 1, puis baisse avant de stagner sous 1. Cette diminution de performance peut être due à plusieurs facteurs :
+
+- **Surcharge de synchronisation** : L'utilisation de `AtomicInteger` pour la gestion des ressources partagées introduit une latence, ralentissant les threads à mesure que leur nombre augmente.
+- **Overhead lié aux threads** : La gestion des threads devient coûteuse lorsque le nombre de cœurs dépasse un certain seuil, annulant les gains de parallélisation.
+- **Tâches trop petites** : L'overhead de la synchronisation devient plus important que les bénéfices de la parallélisation avec de petites charges de travail par processeur.
+
+Ces facteurs expliquent la baisse du speedup et indiquent que l'implémentation n'est pas optimale au-delà d'un certain nombre de cœurs.
+
+#### **Tableau des résultats de scalabilité faible**
+
+Voici le tableau des résultats pour les tests de scalabilité faible d'Assignment102, répétés 5 fois pour avoir une moyenne :
+
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de PI | Erreur  |
+|-----------------|---------------|-----------------|------------------------|---------------------|---------|
+| 1               | 1,000,000     | 1,000,000       | 120.2                  | 3.1432696           | 5.34e-4 |
+| 2               | 2,000,000     | 1,000,000       | 205.0                  | 3.141348            | 7.79e-5 |
+| 4               | 4,000,000     | 1,000,000       | 354.6                  | 3.1415638           | 9.18e-6 |
+| 8               | 8,000,000     | 1,000,000       | 773.6                  | 3.1415113           | 2.59e-5 |
+| 16              | 16,000,000    | 1,000,000       | 1456.8                 | 3.1415671           | 8.13e-6 |
+| 1               | 10,000,000    | 10,000,000      | 943.8                  | 3.14194448          | 1.12e-4 |
+| 2               | 20,000,000    | 10,000,000      | 1826.0                 | 3.14176164          | 5.38e-5 |
+| 4               | 40,000,000    | 10,000,000      | 3875.0                 | 3.14177182          | 5.70e-5 |
+| 8               | 80,000,000    | 10,000,000      | 10112.6                | 3.14151361          | 2.52e-5 |
+| 16              | 160,000,000   | 10,000,000      | 20315.6                | 3.141623355         | 9.77e-6 |
+| 1               | 100,000,000   | 100,000,000     | 11313.8                | 3.141555048         | 1.20e-5 |
+
+### Observations
+
+Les tests se limitent ici pour `Assignment102` en raison de problèmes d'optimisation, causant une erreur `OutOfMemory` pour des charges de travail plus importantes. Cette limitation est un indicateur de la mauvaise gestion des ressources dans cette implémentation, notamment pour de très grandes quantités de points.
+
+Voici le speedup calculé par le même programme python pour la scalabilité faible :
+
+![Scalabilité faible Assignment102](plot/scalabilite_faible_Assignment102_10000000.png)
+
+Comme on peut l'observer, la scalabilité est loin d'être linéaire. Elle semble décroître proportionnellement au nombre de points ajoutés. En effet, chaque fois que l'on double le nombre de points, le speedup est réduit de moitié.
+
+Ce résultat n'est toutefois pas surprenant, étant donné celui observé lors du test de scalabilité forte. Le speedup était presque linéaire, ce qui suggère que l'ajout de processus a un impact quasi-inexistant sur la performance du programme. Par conséquent, doubler le nombre de points entraîne logiquement un temps d'exécution deux fois plus long.
+
+### **D. Résultats Pi.Java**
+
+Aucune modification n'a été nécessaire pour cette classe, qui intègre déjà une option permettant de limiter le nombre de workers.
+
+#### **Tableau des résultats de scalabilité forte**
+
+Voici les résultats obtenus lors des tests de scalabilité forte, répétés 5 fois pour calculer une moyenne :
+
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de PI | Erreur            |
+|-----------------|---------------|-----------------|------------------------|---------------------|-------------------|
+| 1               | 1,000,000     | 1,000,000       | 56.8                   | 3.1431048           | 4.81 × 10⁻⁴       |
+| 2               | 1,000,000     | 500,000         | 27.0                   | 3.141724            | 4.18 × 10⁻⁵       |
+| 4               | 1,000,000     | 250,000         | 14.4                   | 3.1408              | 2.52 × 10⁻⁴       |
+| 8               | 1,000,000     | 125,000         | 11.6                   | 3.1418616           | 8.56 × 10⁻⁵       |
+| 16              | 1,000,000     | 62,500          | 8.0                    | 3.1423224           | 2.32 × 10⁻⁴       |
+| 1               | 10,000,000    | 10,000,000      | 414.0                  | 3.14151048          | 2.62 × 10⁻⁵       |
+| 2               | 10,000,000    | 5,000,000       | 217.8                  | 3.1416816           | 2.83 × 10⁻⁵       |
+| 4               | 10,000,000    | 2,500,000       | 122.4                  | 3.14141312          | 5.71 × 10⁻⁵       |
+| 8               | 10,000,000    | 1,250,000       | 68.4                   | 3.14099672          | 1.90 × 10⁻⁴       |
+| 16              | 10,000,000    | 625,000         | 59.0                   | 3.14134416          | 7.91 × 10⁻⁵       |
+| 1               | 100,000,000   | 100,000,000     | 4335.0                 | 3.141607864         | 4.84 × 10⁻⁶       |
+| 2               | 100,000,000   | 50,000,000      | 2421.2                 | 3.141605256         | 4.01 × 10⁻⁶       |
+| 4               | 100,000,000   | 25,000,000      | 1250.4                 | 3.141652968         | 1.92 × 10⁻⁵       |
+| 8               | 100,000,000   | 12,500,000      | 677.4                  | 3.141578304         | 4.57 × 10⁻⁶       |
+| 16              | 100,000,000   | 6,250,000       | 412.0                  | 3.141576256         | 5.22 × 10⁻⁶       |
+
+La courbe suivante représente le speedup obtenu :
+
+![Scalabilité forte Pi.java](plot/scalabilite_forte_Pi.java_100000000.png)
+
+Comme on peut le constater, la courbe suit une trajectoire presque linéaire sur une large plage de points, avant de légèrement dévier au-delà de 8 cœurs. Malgré cela, le speedup reste croissant, ce qui témoigne d'une parallélisation efficace.
+
+Avec 8 cœurs physiques (avec 2 coeurs logiques chacun), l'implémentation atteint une performance équivalente à environ 11 cœurs logiques. Cela confirme l'efficacité de la parallélisation dans ce code.
+
+#### **Tableau des résultats de scalabilité faible**
+
+| Nombre de cœurs | Points lancés  | Points par cœur | Temps d'exécution (ms) | Approximation de PI | Erreur            |
+|-----------------|----------------|-----------------|------------------------|---------------------|-------------------|
+| 1               | 1,000,000      | 1,000,000       | 63.0                   | 3.1423984           | 2.56 × 10⁻⁴       |
+| 2               | 2,000,000      | 1,000,000       | 56.2                   | 3.1412836           | 9.84 × 10⁻⁵       |
+| 4               | 4,000,000      | 1,000,000       | 64.6                   | 3.1418568           | 8.41 × 10⁻⁵       |
+| 8               | 8,000,000      | 1,000,000       | 109.6                  | 3.1417325           | 4.45 × 10⁻⁵       |
+| 16              | 16,000,000     | 1,000,000       | 156.4                  | 3.14142355          | 5.38 × 10⁻⁵       |
+| 1               | 10,000,000     | 10,000,000      | 530.8                  | 3.14203488          | 1.41 × 10⁻⁴       |
+| 2               | 20,000,000     | 10,000,000      | 552.0                  | 3.14175008          | 5.01 × 10⁻⁵       |
+| 4               | 40,000,000     | 10,000,000      | 534.4                  | 3.14163064          | 1.21 × 10⁻⁵       |
+| 8               | 80,000,000     | 10,000,000      | 579.4                  | 3.14150764          | 2.71 × 10⁻⁵       |
+| 16              | 160,000,000    | 10,000,000      | 776.2                  | 3.1415749           | 5.65 × 10⁻⁶       |
+| 1               | 100,000,000    | 100,000,000     | 4662.4                 | 3.141613336         | 6.58 × 10⁻⁶       |
+| 2               | 200,000,000    | 100,000,000     | 5105.6                 | 3.14153096          | 1.96 × 10⁻⁵       |
+| 4               | 400,000,000    | 100,000,000     | 5256.0                 | 3.141570872         | 6.93 × 10⁻⁶       |
+| 8               | 800,000,000    | 100,000,000     | 7791.6                 | 3.141575614         | 5.42 × 10⁻⁶       |
+| 16              | 1,600,000,000  | 100,000,000     | 8710.6                 | 3.141579264         | 4.26 × 10⁻⁶       |
+
+La courbe suivante illustre le speedup observé :
+
+![Scalabilité faible Pi.java](plot/scalabilite_faible_Pi.java_100000000.png)
+
+On peut voir que le speedup **décroît** lentement au fur et à mesure que le nombre de processeurs augmente. Bien que cette décroissance soit bien plus modérée que dans le cas d'Assignment102, le speedup passe tout de même de **1** (avec un seul processeur) à environ **0,75** avec 16 processeurs.
+
+Cette baisse indique que le code `Pi.java` perd en efficacité parallèle avec l'augmentation des ressources disponibles, mais cette perte reste contenue. Cela pourrait être lié à des surcoûts croissants liés à la gestion des threads ou à une saturation progressive de la capacité à paralléliser les calculs supplémentaires de manière optimale. Cela reste néanmoins un résultat globalement satisfaisant comparé à Assignment102, où la scalabilité chute bien plus rapidement.

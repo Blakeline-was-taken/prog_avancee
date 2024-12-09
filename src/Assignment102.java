@@ -1,3 +1,5 @@
+package tests;
+
 // Estimate the value of Pi using Monte-Carlo Method, using parallel program
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -5,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 class PiMonteCarlo {
 	AtomicInteger nAtomSuccess;
 	int nThrows;
+	int nProcessors;
 	double value;
 	class MonteCarlo implements Runnable {
 		@Override
@@ -15,13 +18,13 @@ class PiMonteCarlo {
 				nAtomSuccess.incrementAndGet();
 		}
 	}
-	public PiMonteCarlo(int i) {
+	public PiMonteCarlo(int i, int processors) {
 		this.nAtomSuccess = new AtomicInteger(0);
 		this.nThrows = i;
+		this.nProcessors = processors;
 		this.value = 0;
 	}
 	public double getPi() {
-		int nProcessors = Runtime.getRuntime().availableProcessors();
 		ExecutorService executor = Executors.newWorkStealingPool(nProcessors);
 		for (int i = 1; i <= nThrows; i++) {
 			Runnable worker = new MonteCarlo();
@@ -36,7 +39,7 @@ class PiMonteCarlo {
 }
 public class Assignment102 {
 	public static void main(String[] args) {
-		PiMonteCarlo PiVal = new PiMonteCarlo(100000);
+		PiMonteCarlo PiVal = new PiMonteCarlo(100000, 8);
 		long startTime = System.currentTimeMillis();
 		double value = PiVal.getPi();
 		long stopTime = System.currentTimeMillis();
