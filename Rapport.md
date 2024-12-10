@@ -463,3 +463,28 @@ La courbe suivante illustre le speedup observé :
 On peut voir que le speedup **décroît** lentement au fur et à mesure que le nombre de processeurs augmente. Bien que cette décroissance soit bien plus modérée que dans le cas d'Assignment102, le speedup passe tout de même de **1** (avec un seul processeur) à environ **0,75** avec 16 processeurs.
 
 Cette baisse indique que le code `Pi.java` perd en efficacité parallèle avec l'augmentation des ressources disponibles, mais cette perte reste contenue. Cela pourrait être lié à des surcoûts croissants liés à la gestion des threads ou à une saturation progressive de la capacité à paralléliser les calculs supplémentaires de manière optimale. Cela reste néanmoins un résultat globalement satisfaisant comparé à Assignment102, où la scalabilité chute bien plus rapidement.
+
+## **V. Mise en œuvre en mémoire distribuée**
+
+Les analyses précédentes ont démontré que le paradigme Master/Worker est plus efficace en termes de parallélisation comparé à l’approche adoptée par *Assignment102*. Nous souhaitons maintenant porter cet algorithme sur une architecture à mémoire distribuée.
+
+Conformément au cours, le paradigme Master/Worker peut être vu comme l'opposé du paradigme Client/Serveur. Dans ce modèle, le *Maître* agit comme un client, tandis que les *Workers* jouent le rôle de serveurs.
+
+On va donc étudier une implémentation reposant sur ce paradigme, où les échanges se font via des sockets Java. Le code fourni fonctionne déjà, mais il ne contient pas encore la partie dédiée au calcul de Pi.
+
+![Diagramme d'exécution du code](img/Execution_MW_Sockets.png)
+
+Dans cette architecture, un Master Socket est utilisé pour initialiser l'expérience Monte Carlo. Ce dernier répartit le travail entre un certain nombre de Worker Sockets en leur attribuant le nombre de points à traiter. Chaque Worker Socket réalise alors ses calculs (actuellement, il ne fait que renvoyer une valeur approximative) et renvoie son résultat au Master.
+
+![Diagramme de classes UML](img/DiagrammeClasse_Sockets.png)
+
+Les échanges entre le Master Socket et les Worker Sockets reposent sur les classes de la bibliothèque `java.net`. Les flux de données sont gérés par `InputStreamReader` et `OutputStreamWriter`. Les classes `PrintWriter` et `BufferedWriter` sont utilisées pour envoyer des messages, tandis que `BufferedReader` permet de les lire.
+
+### **A. Implémentation calcul par méthode**
+
+![Nouvelle classe WorkerSocket](img/NewWorkerSocket.png)
+
+Pour implémenter la partie calcul de Pi, une méthode `performMonteCarloComputation` a été ajoutée. Cette méthode est appelée lorsque le Worker reçoit une demande de calcul : il traite sa part de points Monte Carlo avant de transmettre le résultat au Master.
+
+### **B. Implémentation calcul en utilisant Pi.java**
+
