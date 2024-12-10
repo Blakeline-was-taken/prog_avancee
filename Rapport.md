@@ -480,6 +480,8 @@ Dans cette architecture, un Master Socket est utilisé pour initialiser l'expér
 
 Les échanges entre le Master Socket et les Worker Sockets reposent sur les classes de la bibliothèque `java.net`. Les flux de données sont gérés par `InputStreamReader` et `OutputStreamWriter`. Les classes `PrintWriter` et `BufferedWriter` sont utilisées pour envoyer des messages, tandis que `BufferedReader` permet de les lire.
 
+Pour exécuter le programme, il faut lancer différentes instances de WorkerSocket et MasterSocket. Dans le cas de WorkerSocket, il est nécessaire de donner en argument au lancement le port sur lequel il doit écrire/lire les flux de données. Et dans le cas de MasterWorker, au démarrage, un prompt demande d'entrer les ports des Workers à utiliser.
+
 ### **A. Implémentation calcul par méthode**
 
 ![Nouvelle classe WorkerSocket](img/NewWorkerSocket.png)
@@ -488,3 +490,13 @@ Pour implémenter la partie calcul de Pi, une méthode `performMonteCarloComputa
 
 ### **B. Implémentation calcul en utilisant Pi.java**
 
+Bien que l'ajout d'une méthode dédiée au calcul Monte Carlo soit une approche fonctionnelle, une alternative plus intéressante consiste à réutiliser le programme que nous avons déjà conçu, à savoir l'algorithme de *Pi.java*. Ainsi, la classe *Master* de *Pi.java* est intégrée directement dans le *WorkerSocket*.
+
+Cette approche donne lieu à une architecture *Master/Worker* multi-niveaux :
+
+- Au premier niveau, un Master Socket répartit les tâches entre plusieurs Worker Sockets sur une architecture à mémoire distribuée.
+- Au second niveau, chaque Worker Socket devient le *Master* d'une architecture *Master/Worker* à mémoire partagée, grâce à l'implémentation déjà existante de *Pi.java*.
+
+Ce modèle, appelé *Programmation Multi-Niveaux*, exploite les avantages de deux types de parallélisme : le parallélisme sur mémoire distribuée au niveau supérieur et le parallélisme sur mémoire partagée au niveau inférieur.
+
+Nous explorerons les possibilités qu'une telle architecture nous offre dans la **partie VII**, mais pour le moment, il nous faut évaluer ce nouveau code comme nous l'avons fait avec *Assignment102* et *Pi.java*.
