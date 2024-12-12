@@ -13,13 +13,12 @@ public class PerformanceTester {
 
         // Liste des implémentations à tester
         MonteCarloImplementation[] implementations = {
-                new PiJavaImplementation(), // Implémentation Pi.java
-                new Assignment102Implementation() // Implémentation Assignment102
+                new SocketImplementation() // Implémentation Socket
         };
 
         for (MonteCarloImplementation impl : implementations) {
             // Charger les données de test
-            String testDataFile = "test_scalab_faible.csv";
+            String testDataFile = "test_scalab_forte.csv";
             BufferedReader reader = new BufferedReader(new FileReader(testDataFile));
             String line;
 
@@ -96,7 +95,50 @@ class Assignment102Implementation implements MonteCarloImplementation {
 
     @Override
     public double execute(int totalPoints, int numCores) {
-        tests.PiMonteCarlo piMonteCarlo = new tests.PiMonteCarlo(totalPoints, numCores);
+        PiMonteCarlo piMonteCarlo = new PiMonteCarlo(totalPoints, numCores);
         return piMonteCarlo.getPi();
+    }
+}
+
+// Implémentation Sockets
+class SocketImplementation implements MonteCarloImplementation {
+
+    class WorkerRunnable implements Runnable {
+        private final int port;
+
+        public WorkerRunnable(int port) {
+            this.port = port;
+        }
+
+        @Override
+        public void run() {
+            try {
+                WorkerSocket.start(port);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public String getName(){
+        return "MW Socket";
+    }
+
+    @Override
+    public double execute(int totalPoints, int numCores) {
+        try {
+            for (int i = 0; i < numCores; i++) {
+                int port = MasterSocket.tab_port[i];
+                Thread workerThread = new Thread(new WorkerRunnable(port));
+                workerThread.start();
+            }
+            Thread.sleep(1);  // On doit attendre 1ms parce que sinon le Master essaye de se connecter au(x) port(s) trop rapidement
+            return MasterSocket.executeDistributedMonteCarlo(numCores, totalPoints);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 }

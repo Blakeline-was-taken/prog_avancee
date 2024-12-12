@@ -1,5 +1,3 @@
-package tests;
-
 import java.io.*;
 import java.net.*;
 /**
@@ -7,16 +5,19 @@ import java.net.*;
  * the result to Master.
  */
 public class WorkerSocket {
-    static int port = 25545; //default port
     private static boolean isRunning = true;
+
+    public static void main(String[] args) throws Exception {
+        int port = 25545; //default port
+        if (!("".equals(args[0]))) port = Integer.parseInt(args[0]);
+        start(port);
+    }
 
     /**
      * compute PI locally by MC and sends the number of points
      * inside the disk to Master.
      */
-    public static void main(String[] args) throws Exception {
-
-        if (!("".equals(args[0]))) port=Integer.parseInt(args[0]);
+    public static void start(int port) throws Exception{
         System.out.println(port);
         ServerSocket s = new ServerSocket(port);
         System.out.println("Server started on port " + port);
@@ -36,12 +37,13 @@ public class WorkerSocket {
                 long result = master.doRun(Integer.parseInt(str), 1);
                 pWrite.println((int) result);      // send number of points in quarter of disk
             } else {
+                System.out.println("Ending...");
+                bRead.close();
+                pWrite.close();
+                soc.close();
                 isRunning=false;
             }
         }
-        bRead.close();
-        pWrite.close();
-        soc.close();
     }
 
     private static int performMonteCarloComputation(int totalCount) {

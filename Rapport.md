@@ -376,7 +376,7 @@ Ces facteurs expliquent la baisse du speedup et indiquent que l'implémentation 
 
 Voici le tableau des résultats pour les tests de scalabilité faible d'Assignment102, répétés 5 fois pour avoir une moyenne :
 
-| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de PI | Erreur  |
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de π  | Erreur  |
 |-----------------|---------------|-----------------|------------------------|---------------------|---------|
 | 1               | 1,000,000     | 1,000,000       | 120.2                  | 3.1432696           | 5.34e-4 |
 | 2               | 2,000,000     | 1,000,000       | 205.0                  | 3.141348            | 7.79e-5 |
@@ -410,7 +410,7 @@ Aucune modification n'a été nécessaire pour cette classe, qui intègre déjà
 
 Voici les résultats obtenus lors des tests de scalabilité forte, répétés 5 fois pour calculer une moyenne :
 
-| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de PI | Erreur            |
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de π  | Erreur            |
 |-----------------|---------------|-----------------|------------------------|---------------------|-------------------|
 | 1               | 1,000,000     | 1,000,000       | 56.8                   | 3.1431048           | 4.81 × 10⁻⁴       |
 | 2               | 1,000,000     | 500,000         | 27.0                   | 3.141724            | 4.18 × 10⁻⁵       |
@@ -438,7 +438,7 @@ Avec 8 cœurs physiques (avec 2 coeurs logiques chacun), l'implémentation attei
 
 #### **Tableau des résultats de scalabilité faible**
 
-| Nombre de cœurs | Points lancés  | Points par cœur | Temps d'exécution (ms) | Approximation de PI | Erreur            |
+| Nombre de cœurs | Points lancés  | Points par cœur | Temps d'exécution (ms) | Approximation de π  | Erreur            |
 |-----------------|----------------|-----------------|------------------------|---------------------|-------------------|
 | 1               | 1,000,000      | 1,000,000       | 63.0                   | 3.1423984           | 2.56 × 10⁻⁴       |
 | 2               | 2,000,000      | 1,000,000       | 56.2                   | 3.1412836           | 9.84 × 10⁻⁵       |
@@ -480,7 +480,9 @@ Dans cette architecture, un Master Socket est utilisé pour initialiser l'expér
 
 Les échanges entre le Master Socket et les Worker Sockets reposent sur les classes de la bibliothèque `java.net`. Les flux de données sont gérés par `InputStreamReader` et `OutputStreamWriter`. Les classes `PrintWriter` et `BufferedWriter` sont utilisées pour envoyer des messages, tandis que `BufferedReader` permet de les lire.
 
-Pour exécuter le programme, il faut lancer différentes instances de WorkerSocket et MasterSocket. Dans le cas de WorkerSocket, il est nécessaire de donner en argument au lancement le port sur lequel il doit écrire/lire les flux de données. Et dans le cas de MasterWorker, au démarrage, un prompt demande d'entrer les ports des Workers à utiliser.
+Pour exécuter le programme, il faut lancer différentes instances de WorkerSocket et MasterSocket. Dans le cas de WorkerSocket, il est nécessaire de donner en argument au lancement le port sur lequel il doit écrire/lire les flux de données. Et dans le cas de MasterWorker, au démarrage, un prompt demande d'entrer le nombre de Workers à utiliser et leurs ports.
+
+Note : En réalité, les ports que l'on entre au lancement du Master n'ont aucune importance puisque le programme prendra toujours les ports 25545, 25546... et ainsi de suite jusqu'à avoir assez de ports pour affecter chaque Worker.
 
 ### **A. Implémentation calcul par méthode**
 
@@ -500,3 +502,181 @@ Cette approche donne lieu à une architecture *Master/Worker* multi-niveaux :
 Ce modèle, appelé *Programmation Multi-Niveaux*, exploite les avantages de deux types de parallélisme : le parallélisme sur mémoire distribuée au niveau supérieur et le parallélisme sur mémoire partagée au niveau inférieur.
 
 Nous explorerons les possibilités qu'une telle architecture nous offre dans la **partie VII**, mais pour le moment, il nous faut évaluer ce nouveau code comme nous l'avons fait avec *Assignment102* et *Pi.java*.
+
+## **VI. Performance MW distribué**
+
+Pour évaluer la performance de l'implémentation distribuée en utilisant Sockets, nous allons répéter la procédure de test que nous avons utilisée pour *Assignment102* et *Pi.java*, mais cette fois sur l'architecture Master/Worker distribuée avec la communication par Sockets. Comme précédemment, le script *PerformanceTester.java* sera utilisé pour exécuter les tests définis en **partie IV**.
+
+### A. Mise en place de l'environnement de test
+
+#### 1. **Création de la classe `SocketImplementation`**
+
+La classe `SocketImplementation` sert à faire le lien entre la classe de test `PerformanceTester` et les classes `MasterSocket` et `WorkerSocket`. Cette classe implémente l'interface `MonteCarloImplementation` et gère la création et l'exécution des processus Master et Worker, en leur fournissant les ports à utiliser pour la communication.
+
+#### 2. **Modification du code MasterSocket**
+
+Pour adapter le code du *MasterSocket* à notre architecture distribuée, nous apportons les modifications suivantes :
+
+- **Augmentation de la capacité du serveur :** Nous passons le paramètre `maxServer` de 8 à 16 pour permettre au Master de gérer jusqu'à 16 Workers.
+- **Ajout de ports dynamiques :** Nous modifions le code afin que les ports sur lesquels les Workers doivent écouter soient spécifiés par la classe *SocketImplementation*. Cela permet une plus grande flexibilité, notamment pour tester avec un nombre variable de Workers et sur différents ports.
+- **Création de la méthode `executeDistributedMonteCarlo` :** Cette méthode centralise toute la logique de distribution du travail entre les Workers. Elle prend en entrée le nombre de Workers et le nombre de points à traiter, et renvoie le résultat du calcul de Pi. Elle assure également la gestion des connexions entre le Master et les Workers.
+- **Simplification de l’exécution du programme :** Nous retirons la partie qui permettait de répéter l’expérience, car cela nous gêne dans les tests. La méthode `main` se charge désormais uniquement de passer les informations (ports, nombre de Workers) et d'afficher le résultat.
+
+#### 3. **Modification du code WorkerSocket**
+
+Du côté des *WorkerSockets*, nous apportons les modifications suivantes :
+
+- **Méthode `main` simplifiée :** main ne sert maintenant qu'à récupérer le port dans les arguments. Nous créons une méthode `start` qui s'occupe de tout le reste. Cette méthode prend un port en argument et s'assure que le Worker s'exécute correctement.
+- **Suppression du champ statique `port` :** Pour faciliter l'exécution concurrente des Workers sur différents ports, nous retirons le champ statique `port` de la classe *WorkerSocket*. Cela permet de lancer plusieurs Workers avec des ports différents sans avoir à modifier le champ statique à chaque fois.
+
+Les modifications des codes *WorkerSocket* et *MasterSocket* ne changent pas leur fonctionnement précédent, ils permettent uniquement d'adapter le code pour qu'il soit également utilisable au sein de notre environnement de test défini.
+
+#### 4. **Problèmes rencontrés avec les ports occupés**
+
+Lors des tests, nous rencontrons un problème majeur : les Workers ne parviennent pas à lancer un Socket sur leur port, et par conséquent, ils ne peuvent pas communiquer avec le Master. Bien que les ports soient attribués correctement, le processus de connexion entre le Master et les Workers échoue systématiquement.
+
+- **Problème des ports occupés :** Un des problèmes apparents est que les ports semblent rester occupés après chaque test, empêchant ainsi les Workers de se connecter lors du test suivant. Cela peut être lié à la gestion des ressources réseau dans l'environnement de test multi-threadé.
+
+- **Problème de connexion entre Master et Worker :** Le problème principal réside dans l'incapacité des Workers à établir une connexion sur les ports qui leur sont attribués. Cela empêche la communication entre le Master et les Workers, ce qui est essentiel pour que l'implémentation distribuée fonctionne correctement.
+
+#### 5. **Solution archaïque**
+
+Comme le fichier fonctionne malgré tout si l'on n'exécute qu'un seul et unique test, on va simplement utiliser un fichier CSV contenant le test à effectuer. Ensuite, nous modifierons son contenu pour passer au test suivant, et ainsi de suite.
+
+C'est une solution certes archaïque, mais elle a l'avantage de nous permettre de contourner les problèmes rencontrés avec la gestion des ports et la connexion entre le Master et les Workers. En attendant une solution plus robuste, cette méthode est plus pratique que de devoir lancer manuellement chaque Worker et le Master.
+
+On retiendra toutefois que le problème auquel nous faisons face souligne bien les défis pratiques d'un environnement de test distribué, où la gestion des ressources réseau et des communications inter-processus peut entraîner des complications non triviales.
+
+### **A. Scalabilité forte**
+
+Voici les résultats obtenus lors des tests de scalabilité **forte**, répétés 5 fois pour avoir une moyenne :
+
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de π | Erreur    |
+|-----------------|---------------|-----------------|------------------------|--------------------|-----------|
+| 1               | 1,000,000     | 1,000,000       | 73.0                   | 3.143948           | 7.4973E-4 |
+| 2               | 1,000,000     | 500,000         | 64.0                   | 1.571436           | 0.4998    |
+| 4               | 1,000,000     | 250,000         | 69.0                   | 0.785471           | 0.7499    |
+| 8               | 1,000,000     | 125,000         | 77.0                   | 0.3930065          | 0.8749    |
+| 16              | 1,000,000     | 62,500          | 82.0                   | 0.1962075          | 0.9375    |
+| 1               | 10,000,000    | 10,000,000      | 431.0                  | 3.14191            | 1.01E-4   |
+| 2               | 10,000,000    | 5,000,000       | 246.0                  | 1.5709236          | 0.4999    |
+| 4               | 10,000,000    | 2,500,000       | 157.0                  | 0.7853404          | 0.7500    |
+| 8               | 10,000,000    | 1,250,000       | 121.0                  | 0.3929184          | 0.8749    |
+| 16              | 10,000,000    | 625,000         | 113.0                  | 0.196379225        | 0.9374    |
+| 1               | 100,000,000   | 100,000,000     | 3,852.0                | 3.14177476         | 5.80E-5   |
+| 2               | 100,000,000   | 50,000,000      | 1,978.0                | 1.57078472         | 0.5000    |
+| 4               | 100,000,000   | 25,000,000      | 1,060.0                | 0.78551727         | 0.7499    |
+| 8               | 100,000,000   | 12,500,000      | 597.0                  | 0.392722585        | 0.8750    |
+| 16              | 100,000,000   | 6,250,000       | 385.0                  | 0.19635459         | 0.9375    |
+
+Et voici la courbe du speedup résultante de ces données :
+
+![Scalabilité_forte_Sockets](plot/scalabilite_forte_MW%20Socket_100000000.png)
+
+L'analyse de ces données se fera dans la **Partie C**.
+
+---
+
+### **B. Scalabilité faible**
+
+Voici les résultats obtenus lors des tests de scalabilité **faible**, répétés 5 fois pour avoir une moyenne :
+
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de π | Erreur  |
+|-----------------|---------------|-----------------|------------------------|--------------------|---------|
+| 1               | 1,000,000     | 1,000,000       | 82.0                   | 3.142072           | 1.53E-4 |
+| 2               | 2,000,000     | 1,000,000       | 89.0                   | 1.570317           | 0.5001  |
+| 4               | 4,000,000     | 1,000,000       | 99.0                   | 0.7853915          | 0.7500  |
+| 8               | 8,000,000     | 1,000,000       | 113.0                  | 0.39264225         | 0.8750  |
+| 16              | 16,000,000    | 1,000,000       | 130.0                  | 0.19631709375      | 0.9375  |
+| 1               | 10,000,000    | 10,000,000      | 565.0                  | 3.1419212          | 1.05E-4 |
+| 2               | 20,000,000    | 10,000,000      | 585.0                  | 1.57062            | 0.5000  |
+| 4               | 40,000,000    | 10,000,000      | 637.0                  | 0.78538065         | 0.7500  |
+| 8               | 80,000,000    | 10,000,000      | 691.0                  | 0.39271431875      | 0.8750  |
+| 16              | 160,000,000   | 10,000,000      | 775.0                  | 0.19635998125      | 0.9375  |
+| 1               | 100,000,000   | 100,000,000     | 3,822.0                | 3.14168248         | 2.86E-5 |
+| 2               | 200,000,000   | 100,000,000     | 3,868.0                | 1.57081145         | 0.4999  |
+| 4               | 400,000,000   | 100,000,000     | 3,992.0                | 0.7853844275       | 0.7500  |
+| 8               | 800,000,000   | 100,000,000     | 4,239.0                | 0.392698864375     | 0.8750  |
+| 16              | 1,600,000,000 | 100,000,000     | 5,063.0                | 0.19635102828125   | 0.9375  |
+
+Et voici la courbe du speedup résultante de ces données :
+
+![Scalabilité_faible_Sockets](plot/scalabilite_faible_MW%20Socket_100000000.png)
+
+### C. Analyse/Conclusion
+
+Nous avons fait des tests de performance sur tous les codes que nous avons vu jusqu'à présent. Il est maintenant temps de les comparer.
+
+#### **Courbes de scalabilité forte en fonction du nombre de points :**
+
+![Comparaison_scalabilité_forte](img/scalabilite_forte_comparaison.png)
+
+#### **Courbes de scalabilité faible en fonction du nombre de points :**
+
+![Comparaison_scalabilité_faible](img/scalabilite_faible_comparaison.png)
+
+Rappel : Assignment102 n'a pas pu réaliser les tests de scalabilité faible pour 100000000 de points par worker à cause d'un manque de mémoire.
+
+#### **Analyse**
+
+Dans le cas de la scalabilité forte (nombre total de points constant), nous avons observé les comportements suivants :
+
+1. **Assignment102** :
+    - Comme établi précédemment, Assignment102 a une scalabilité forte très mauvaise.
+    - Elle reste constamment proche de 1, et n'augmente pas.
+
+2. **Pi.java** :
+    - Pi.java a la meilleure scalabilité forte des 3 codes.
+    - Le speedup est quasi-idéal, suivant de près la courbe et ne faisant que s'améliorer avec un plus grand nombre de points.
+
+3. **MW Socket** :
+    - L'implémentation MW en Socket est un cas particulièrement intéressant.
+    - Il a une scalabilité forte similaire à *Assignment102* avec peu de points, et similaire à *Pi.java* avec beaucoup de points.
+
+En résumé, `Pi.java` a la meilleure scalabilité forte sur tous les nombres de points, mais `MW Socket` semble s'améliorer avec un plus grand nombre. On peut imaginer que cette implémentation pourrait éventuellement dépasser Pi.java avec un nombre suffisant de points.
+
+#### **Scalabilité faible**
+
+Pour la scalabilité faible (nombre de points par worker constant), les résultats sont les suivants :
+
+1. **Assignment102** :
+    - Là encore, comme pour la scalabilité forte, Assignment102 a une scalabilité faible très mauvaise.
+    - Le speedup est divisé par 2 à chaque fois que le nombre de points/worker est multiplié par 2, indiquant une quasi-inutilité de l'ajout du nombre de workers.
+
+2. **Pi.java** :
+    - Pi.java a une scalabilité faible correcte, mais qui baisse de manière toujours plutôt conséquente.
+    - De plus, on remarque qu'avec 1000000 de points, le speedup de Pi.java passe au dessus de la bare des 1.0. Ce qui est conforme aux données, mais qui reste difficile à expliquer.
+
+3. **MW Socket** :
+    - L'implémentation MW en Socket a la meilleure scalabilité faible des 3 codes.
+    - Bien que le speedup de Pi.java lui soit supérieur en dessous de 16 workers sur 1000000 et 10000000 de points, il finit toujours par repasser au dessus.
+    - Et arrivé à 100000000, le speedup de Pi.java est complètement en dessous de celui du MW Socket.
+
+MW Socket a donc un avantage ici, bien que l'efficacité décroit au fur et à mesure que les ressources augmentent comme pour `Pi.java`.
+
+#### **Limites et recommandations**
+
+1. **Assignment102** :
+- Limites :
+    - Très mauvaise scalabilité, à la fois forte et faible.
+    - Impossibilité d'exécuter des tests avec un nombre important de points par worker, probablement dû à une gestion inefficace de la mémoire.
+- Recommandations :
+    - Revoir complètement la structure de ce code. Il serait pertinent d'implémenter une meilleure gestion des tâches et des communications entre workers.
+    - Tester d'autres approches algorithmiques pour améliorer l'utilisation des ressources.
+
+2. **Pi.java** :
+- Limites :
+    - Scalabilité faible qui baisse avec le nombre croissant de workers.
+    - Algorithme bon mais qui ne fonctionne qu'en mémoire partagée, difficile donc à porter sur d'autres infrastructures.
+- Recommandations :
+    - Limiter l'utilisation de cette implémentation à des scénarios de mémoire partagée pour éviter les contraintes liées à la distribution.
+
+3. **MW Socket** :
+- Limites :
+    - Bien que la scalabilité faible soit la meilleure, elle diminue tout de même encore significativement avec l'augmentation du nombre de workers.
+    - L'implémentation par sockets peut engendrer une surcharge de communication, surtout avec un grand nombre de workers.
+- Recommandations :
+    - Optimiser la gestion des communications entre les workers pour réduire les surcharges liées aux sockets.
+    - Utiliser cette implémentation pour des cas nécessitant une mémoire distribuée et où la charge peut être suffisamment répartie.
+
+En guise de conclusion, MW Socket est l'implémentation préférable pour des scénarios à mémoire distribuée, Pi.java est préférable pour une mémoire partagée uniquement, tandis qu'Assignment102 n'est pas viable pour une utilisation pratique.
