@@ -6,8 +6,12 @@ import java.net.*;
 public class MasterSocket {
     static int maxServer = 16;
     static int[] tab_port = {25545,25546,25547,25548,25549,25550,25551,25552,25553,25554,25555,25556,25557,25558,25559,25560};
+	static final String[] tab_ips = {
+			"192.168.24.154", "192.168.24.150", "192.168.0.103", "192.168.0.104",
+			"192.168.0.105", "192.168.0.106", "192.168.0.107", "192.168.0.108",
+			"192.168.0.109", "192.168.0.110", "192.168.0.111", "192.168.0.112",
+	};
     static String[] tab_total_workers = new String[maxServer];
-    static final String ip = "127.0.0.1";
     static BufferedReader[] reader = new BufferedReader[maxServer];
     static PrintWriter[] writer = new PrintWriter[maxServer];
     static Socket[] sockets = new Socket[maxServer];
@@ -36,6 +40,14 @@ public class MasterSocket {
 		}
 
 		for (int i=0; i<numWorkers; i++){
+			System.out.println("Enter worker"+ i +" IP : ");
+			try {
+				s = bufferRead.readLine();
+				tab_ips[i] = s;
+				System.out.println("You select " + s);
+			} catch(IOException ioE) {
+				ioE.printStackTrace();
+			}
 			System.out.println("Enter worker"+ i +" port : ");
 			try {
 				s = bufferRead.readLine();
@@ -66,7 +78,7 @@ public class MasterSocket {
 
 		//create worker's socket
         for(int i = 0 ; i < numWorkers ; i++) {
-		    sockets[i] = new Socket(ip, tab_port[i]);
+		    sockets[i] = new Socket(tab_ips[i], tab_port[i]);
 		    System.out.println("SOCKET = " + sockets[i]);
 
 		    reader[i] = new BufferedReader( new InputStreamReader(sockets[i].getInputStream()));
