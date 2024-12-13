@@ -694,27 +694,36 @@ Cette expérience a été réalisée dans la salle G24 de l'IUT de Vélizy. Prob
 Voici les différentes étapes suivies pour mener à bien cette expérience :
 
 #### 1. **Préparation des machines :**
+
 - Configurer les machines des Workers et du Master pour qu'elles soient prêtes à exécuter leur fonction et à communiquer entre elles.
 - Pour cela, on installe l'outil de développement Java avec la commande `sudo yum install java-devel` sur chaque machine.
 
 #### 2. **Ouverture des ports sur les Workers :**
+
 - IMPORTANT : Chaque Worker doit utiliser un port TCP distinct pour communiquer avec le Master. Deux Workers ne peuvent pas utiliser le même port, sinon ce dernier sera surchargé.
 - Pour ouvrir des ports spécifiques dans le pare-feu, il nous suffit d'exécuter la commande `firewall-cmd --zone=public --add-port=25545/tcp` sur chaque Worker _(ici le port 25545)_.
 
 #### 3. **Déploiement et compilation du code :**
+
 - Une fois les machines configurées et les ports ouverts, il ne reste plus qu'à installer le code Java sur chaque Worker et sur le Master. On compilera le code avec la commande `javac *.java`.
 
 #### 4. **Lancement des Workers :**
+
 - Les Workers sont lancés en premier, comme on l'a fait pour les tests sur une seule machine. On lance donc sur chaque machine Worker la commande suivante `./java Workersocket 25545` _(évidemment ici 25545 est un exemple, il faut le remplacer par le port attribué au worker sur lequel on lance la commande)_.
 
 #### 5. **Lancement du Master :**
+
 - Une fois tous les Workers lancés et en écoute, on peut lancer le Master. On lui fournit chaque Worker par son adresse IP et son port, un par un.
 
 #### 6. **Exécution :**
+
+![Schéma MW sur machines physiques](img/Schema_Memoire_Distribuee.png) 
+
 - Si les étapes précédentes ont été réalisées correctement, le Master arrive à envoyer des requêtes aux Workers, et les Workers arrivent à renvoyer leur résultat au Master.
 - On rappelle que chaque WorkerSocket utilise donc le code Pi.java sur les machines où ils sont exécutés. Pour le moment, on limite le nombre de Workers de Pi.java à 1, car on fera une deuxième expérience pour l'architecture Multi-Niveaux.
 
 #### 7. **Résultats :**
+
 - Une fois le calcul terminé, les résultats sont affichés sur la console comme précédemment, incluant toutes les informations nécessaires.
 
 #### **Conclusion**
