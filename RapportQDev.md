@@ -127,28 +127,7 @@ La norme ISO 25010 reconnaît que les besoins en qualité varient en fonction de
 
 La norme ISO 25022 définit des Quality in Use Measures (Mesures de qualité d'usage), qui se réfèrent à l'évaluation de la performance d'un produit dans un contexte d'utilisation spécifique. Ces mesures sont utilisées pour évaluer les critères de Quality in Use définis plus tôt.
 
-Ces mesures permettent une évaluation complète des **Quality in Use** en se basant sur des critères quantitatifs et qualitatifs, adaptés aux différents contextes d'utilisation. Les mesures diffèrent selon les critères, et nous allons ici lister les 3 premières.
-
-### **Effectiveness Measure**
-Les mesures d'efficacité se concentrent sur la capacité d'un utilisateur ou d'un système à accomplir ses tâches correctement et complètement dans un contexte d'utilisation spécifique. Selon l'ISO 25022, ces mesures comprennent :
-- **Taux de réussite** : Pourcentage de tâches effectuées avec succès par les utilisateurs.
-- **Taux d'erreur** : Fréquence des erreurs ou des échecs dans l'accomplissement des tâches.
-- **Complétude des tâches** : Évaluation de la proportion de la tâche qui a été réalisée.
-- **Précision des résultats** : Niveau d'exactitude des résultats obtenus par rapport aux attentes.
-
-### **Efficiency Measure**
-Les mesures d'efficacité évaluent les ressources consommées par rapport aux résultats obtenus. Ces ressources peuvent inclure le temps, l'effort ou encore les coûts. Les principales mesures sont :
-- **Temps d'accomplissement des tâches** : Temps moyen nécessaire pour accomplir une tâche.
-- **Taux d'effort** : Mesure de l'effort physique ou cognitif nécessaire à l'exécution d'une tâche.
-- **Consommation de ressources** : Utilisation de ressources telles que la mémoire, la bande passante ou l'énergie.
-- **Productivité** : Ratio entre la production réalisée et les ressources consommées.
-
-### **Satisfaction Measure**
-Les mesures de satisfaction évaluent le degré de plaisir, de confort et d'acceptation perçu par les utilisateurs lorsqu'ils interagissent avec le système. Cela inclut :
-- **Niveau d'acceptation** : Degré d'acceptation du système par les utilisateurs.
-- **Niveau de confort** : Évaluation du confort d'utilisation, y compris ergonomie et convivialité.
-- **Satisfaction globale** : Mesure subjective du niveau de satisfaction des utilisateurs après utilisation.
-- **Perception d'utilité** : Degré auquel l'utilisateur perçoit que le système lui est utile.
+Ces mesures permettent une évaluation complète des **Quality in Use** en se basant sur des critères quantitatifs et qualitatifs, adaptés aux différents contextes d'utilisation.
 
 ## Évaluation d'un code parallèle
 
