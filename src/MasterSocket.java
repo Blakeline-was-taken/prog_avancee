@@ -112,6 +112,6 @@ public class MasterSocket {
 		    sockets[i].close();
         }
 
-		return 4.0 * total / totalCount / numWorkers;
+		return 4.0 * total / totalCount;
    }
 }

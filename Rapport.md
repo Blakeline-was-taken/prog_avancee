@@ -253,7 +253,7 @@ On peut donc s'attendre à de meilleures performances qu'`Assignment102` au mome
 
 ## IV. Évaluations et tests de performances
 
-La partie suivante vient directement d'un autre rapport que j'écris en parallèle de celui-ci, qui concerne le module de Qualité de Développement en troisième année de BUT informatique.
+La partie suivante contient des éléments d'un autre rapport que j'écris en parallèle de celui-ci, qui concerne le module de Qualité de Développement en troisième année de BUT informatique.
 
 L'ordinateur qui a réalisé ces calculs possède les specs suivantes :
 - **Processeur :** 11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz
@@ -272,7 +272,7 @@ L'outil est modulaire, permettant d'ajouter facilement de nouvelles versions de 
 
 ### **B. Tests de Scalabilité**
 
-Nous allons réaliser les mêmes tests sur tous les codes, afin de pouvoir les comparer plus efficacement.  On compare les performances des différents codes en termes de scalabilité, en évaluant leur capacité à s'adapter à une augmentation du nombre de cœurs, selon deux approches : **scalabilité forte** et **scalabilité faible**.
+Nous allons réaliser les mêmes tests sur tous les codes, afin de pouvoir les comparer plus efficacement. On compare les performances des différents codes en termes de scalabilité, en évaluant leur capacité à s'adapter à une augmentation du nombre de cœurs, selon deux approches : **scalabilité forte** et **scalabilité faible**.
 
 #### **1. Scalabilité Forte**
 
@@ -390,8 +390,6 @@ Voici le tableau des résultats pour les tests de scalabilité faible d'Assignme
 | 16              | 160,000,000   | 10,000,000      | 20315.6                | 3.141623355         | 9.77e-6 |
 | 1               | 100,000,000   | 100,000,000     | 11313.8                | 3.141555048         | 1.20e-5 |
 
-### Observations
-
 Les tests se limitent ici pour `Assignment102` en raison de problèmes d'optimisation, causant une erreur `OutOfMemory` pour des charges de travail plus importantes. Cette limitation est un indicateur de la mauvaise gestion des ressources dans cette implémentation, notamment pour de très grandes quantités de points.
 
 Voici le speedup calculé par le même programme python pour la scalabilité faible :
@@ -401,6 +399,18 @@ Voici le speedup calculé par le même programme python pour la scalabilité fai
 Comme on peut l'observer, la scalabilité est loin d'être linéaire. Elle semble décroître proportionnellement au nombre de points ajoutés. En effet, chaque fois que l'on double le nombre de points, le speedup est réduit de moitié.
 
 Ce résultat n'est toutefois pas surprenant, étant donné celui observé lors du test de scalabilité forte. Le speedup était presque linéaire, ce qui suggère que l'ajout de processus a un impact quasi-inexistant sur la performance du programme. Par conséquent, doubler le nombre de points entraîne logiquement un temps d'exécution deux fois plus long.
+
+#### **Test d'efficacité (Effectiveness)**
+
+Assignment102 présente des résultats mitigés en termes de scalabilité, mais démontre une certaine efficacité dans le calcul de π.
+
+Pour évaluer cette efficacité, nous avons analysé l'erreur moyenne en fonction du nombre total de points lancés. Le graphique suivant illustre cette relation :
+
+![Erreur Assignment102](plot/erreur_Assignment102.png)
+
+On observe que l'erreur diminue globalement à mesure que le nombre total de points augmente, bien que des fluctuations sporadiques soient présentes. La médiane de l'erreur calculée est de **2.59 × 10⁻⁵**, indiquant que malgré les limites de l'implémentation en termes de scalabilité, l'estimation de π reste relativement précise.
+
+Cependant, cette analyse reste incomplète sans une comparaison directe avec d'autres implémentations similaires, telles que *Pi.java*. Cela permettra de mieux évaluer l'efficacité relative de *Assignment102* dans un contexte plus large.
 
 ### **D. Résultats Pi.Java**
 
@@ -464,6 +474,16 @@ On peut voir que le speedup **décroît** lentement au fur et à mesure que le n
 
 Cette baisse indique que le code `Pi.java` perd en efficacité parallèle avec l'augmentation des ressources disponibles, mais cette perte reste contenue. Cela pourrait être lié à des surcoûts croissants liés à la gestion des threads ou à une saturation progressive de la capacité à paralléliser les calculs supplémentaires de manière optimale. Cela reste néanmoins un résultat globalement satisfaisant comparé à Assignment102, où la scalabilité chute bien plus rapidement.
 
+#### **Test d'efficacité (Effectiveness)**
+
+Pour évaluer l’efficacité de l’approximation de π, nous avons analysé un nuage de points représentant la moyenne des erreurs obtenues pour chaque configuration du nombre total de points utilisés.
+
+![Erreur Pi.java](plot/erreur_Pi.java.png)
+
+Le graphique révèle une répartition bien plus régulière des erreurs par rapport à Assignment102, avec une tendance claire à la décroissance lorsque le nombre de points augmente. La médiane de l’erreur est de **2.71 × 10⁻⁵** pour Pi.java, contre **2.59 × 10⁻⁵** pour Assignment102.
+
+Bien que l’erreur médiane soit légèrement plus élevée pour Pi.java, sa distribution est beaucoup plus cohérente et moins erratique que celle d’Assignment102. Par conséquent, il est difficile de conclure qu’un code est systématiquement meilleur que l’autre pour évaluer π, car les écarts observés pourraient résulter de variations aléatoires plutôt que d’une véritable différence d’efficacité.
+
 ## **V. Mise en œuvre en mémoire distribuée**
 
 Les analyses précédentes ont démontré que le paradigme Master/Worker est plus efficace en termes de parallélisation comparé à l’approche adoptée par *Assignment102*. Nous souhaitons maintenant porter cet algorithme sur une architecture à mémoire distribuée.
@@ -504,6 +524,8 @@ Ce modèle, appelé *Programmation Multi-Niveaux*, exploite les avantages de deu
 Nous explorerons les possibilités qu'une telle architecture nous offre dans la **partie VII**, mais pour le moment, il nous faut évaluer ce nouveau code comme nous l'avons fait avec *Assignment102* et *Pi.java*.
 
 ## **VI. Performance MW distribué**
+
+Comme pour la précédente partie dédiée à l'évaluation de performance, la majorité de la partie suivante vient du rapport de Qualité de Développement.
 
 Pour évaluer la performance de l'implémentation distribuée en utilisant Sockets, nous allons répéter la procédure de test que nous avons utilisée pour *Assignment102* et *Pi.java*, mais cette fois sur l'architecture Master/Worker distribuée avec la communication par Sockets. Comme précédemment, le script *PerformanceTester.java* sera utilisé pour exécuter les tests définis en **partie IV**.
 
@@ -551,23 +573,23 @@ On retiendra toutefois que le problème auquel nous faisons face souligne bien l
 
 Voici les résultats obtenus lors des tests de scalabilité **forte**, répétés 5 fois pour avoir une moyenne :
 
-| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de π | Erreur    |
-|-----------------|---------------|-----------------|------------------------|--------------------|-----------|
-| 1               | 1,000,000     | 1,000,000       | 73.0                   | 3.143948           | 7.4973E-4 |
-| 2               | 1,000,000     | 500,000         | 64.0                   | 1.571436           | 0.4998    |
-| 4               | 1,000,000     | 250,000         | 69.0                   | 0.785471           | 0.7499    |
-| 8               | 1,000,000     | 125,000         | 77.0                   | 0.3930065          | 0.8749    |
-| 16              | 1,000,000     | 62,500          | 82.0                   | 0.1962075          | 0.9375    |
-| 1               | 10,000,000    | 10,000,000      | 431.0                  | 3.14191            | 1.01E-4   |
-| 2               | 10,000,000    | 5,000,000       | 246.0                  | 1.5709236          | 0.4999    |
-| 4               | 10,000,000    | 2,500,000       | 157.0                  | 0.7853404          | 0.7500    |
-| 8               | 10,000,000    | 1,250,000       | 121.0                  | 0.3929184          | 0.8749    |
-| 16              | 10,000,000    | 625,000         | 113.0                  | 0.196379225        | 0.9374    |
-| 1               | 100,000,000   | 100,000,000     | 3,852.0                | 3.14177476         | 5.80E-5   |
-| 2               | 100,000,000   | 50,000,000      | 1,978.0                | 1.57078472         | 0.5000    |
-| 4               | 100,000,000   | 25,000,000      | 1,060.0                | 0.78551727         | 0.7499    |
-| 8               | 100,000,000   | 12,500,000      | 597.0                  | 0.392722585        | 0.8750    |
-| 16              | 100,000,000   | 6,250,000       | 385.0                  | 0.19635459         | 0.9375    |
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de π | Erreur   |
+|-----------------|---------------|-----------------|------------------------|--------------------|----------|
+| 1               | 1,000,000     | 1,000,000       | 73.0                   | 3.143948           | 7.50e-04 |
+| 2               | 1,000,000     | 500,000         | 64.0                   | 3.142872           | 4.07e-04 |
+| 4               | 1,000,000     | 250,000         | 69.0                   | 3.141884           | 9.27e-05 |
+| 8               | 1,000,000     | 125,000         | 77.0                   | 3.144052           | 7.83e-04 |
+| 16              | 1,000,000     | 62,500          | 82.0                   | 3.13932            | 7.23e-04 |
+| 1               | 10,000,000    | 10,000,000      | 431.0                  | 3.14191            | 1.01e-04 |
+| 2               | 10,000,000    | 5,000,000       | 246.0                  | 3.1418472          | 8.10e-05 |
+| 4               | 10,000,000    | 2,500,000       | 157.0                  | 3.1413616          | 7.35e-05 |
+| 8               | 10,000,000    | 1,250,000       | 121.0                  | 3.1433472          | 5.58e-04 |
+| 16              | 10,000,000    | 625,000         | 113.0                  | 3.1420676          | 1.51e-04 |
+| 1               | 100,000,000   | 100,000,000     | 3852.0                 | 3.14177476         | 5.80e-05 |
+| 2               | 100,000,000   | 50,000,000      | 1978.0                 | 3.14156944         | 7.39e-06 |
+| 4               | 100,000,000   | 25,000,000      | 1060.0                 | 3.14206908         | 1.52e-04 |
+| 8               | 100,000,000   | 12,500,000      | 597.0                  | 3.14178068         | 5.99e-05 |
+| 16              | 100,000,000   | 6,250,000       | 385.0                  | 3.14167344         | 2.57e-05 |
 
 Et voici la courbe du speedup résultante de ces données :
 
@@ -581,27 +603,41 @@ L'analyse de ces données se fera dans la **Partie C**.
 
 Voici les résultats obtenus lors des tests de scalabilité **faible**, répétés 5 fois pour avoir une moyenne :
 
-| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de π | Erreur  |
-|-----------------|---------------|-----------------|------------------------|--------------------|---------|
-| 1               | 1,000,000     | 1,000,000       | 82.0                   | 3.142072           | 1.53E-4 |
-| 2               | 2,000,000     | 1,000,000       | 89.0                   | 1.570317           | 0.5001  |
-| 4               | 4,000,000     | 1,000,000       | 99.0                   | 0.7853915          | 0.7500  |
-| 8               | 8,000,000     | 1,000,000       | 113.0                  | 0.39264225         | 0.8750  |
-| 16              | 16,000,000    | 1,000,000       | 130.0                  | 0.19631709375      | 0.9375  |
-| 1               | 10,000,000    | 10,000,000      | 565.0                  | 3.1419212          | 1.05E-4 |
-| 2               | 20,000,000    | 10,000,000      | 585.0                  | 1.57062            | 0.5000  |
-| 4               | 40,000,000    | 10,000,000      | 637.0                  | 0.78538065         | 0.7500  |
-| 8               | 80,000,000    | 10,000,000      | 691.0                  | 0.39271431875      | 0.8750  |
-| 16              | 160,000,000   | 10,000,000      | 775.0                  | 0.19635998125      | 0.9375  |
-| 1               | 100,000,000   | 100,000,000     | 3,822.0                | 3.14168248         | 2.86E-5 |
-| 2               | 200,000,000   | 100,000,000     | 3,868.0                | 1.57081145         | 0.4999  |
-| 4               | 400,000,000   | 100,000,000     | 3,992.0                | 0.7853844275       | 0.7500  |
-| 8               | 800,000,000   | 100,000,000     | 4,239.0                | 0.392698864375     | 0.8750  |
-| 16              | 1,600,000,000 | 100,000,000     | 5,063.0                | 0.19635102828125   | 0.9375  |
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) | Approximation de π | Erreur   |
+|-----------------|---------------|-----------------|------------------------|--------------------|----------|
+| 1               | 1,000,000     | 1,000,000       | 82.0                   | 3.142072           | 1.53e-04 |
+| 2               | 2,000,000     | 1,000,000       | 89.0                   | 3.140634           | 3.05e-04 |
+| 4               | 4,000,000     | 1,000,000       | 99.0                   | 3.141566           | 8.48e-06 |
+| 8               | 8,000,000     | 1,000,000       | 113.0                  | 3.141138           | 1.45e-04 |
+| 16              | 16,000,000    | 1,000,000       | 130.0                  | 3.1410735          | 1.65e-04 |
+| 1               | 10,000,000    | 10,000,000      | 565.0                  | 3.1419212          | 1.05e-04 |
+| 2               | 20,000,000    | 10,000,000      | 585.0                  | 3.14124            | 1.12e-04 |
+| 4               | 40,000,000    | 10,000,000      | 637.0                  | 3.1415226          | 2.23e-05 |
+| 8               | 80,000,000    | 10,000,000      | 691.0                  | 3.14171455         | 3.88e-05 |
+| 16              | 160,000,000   | 10,000,000      | 775.0                  | 3.1417597          | 5.32e-05 |
+| 1               | 100,000,000   | 100,000,000     | 3822.0                 | 3.14168248         | 2.86e-05 |
+| 2               | 200,000,000   | 100,000,000     | 3868.0                 | 3.1416229          | 9.63e-06 |
+| 4               | 400,000,000   | 100,000,000     | 3992.0                 | 3.14153771         | 1.75e-05 |
+| 8               | 800,000,000   | 100,000,000     | 4239.0                 | 3.141590915        | 5.53e-07 |
+| 16              | 1,600,000,000 | 100,000,000     | 5063.0                 | 3.1416164525       | 7.58e-06 |
 
 Et voici la courbe du speedup résultante de ces données :
 
 ![Scalabilité_faible_Sockets](plot/scalabilite_faible_MW%20Socket_100000000.png)
+
+L'analyse de ces données se fera dans la **Partie C**.
+
+---
+
+#### **Test d'efficacité (Effectiveness)**
+
+Comme pour Assignment102 et Pi.java, voici un nuage de points des erreurs de cette implémentation :
+
+![Erreur Sockets](plot/erreur_MW%20Socket.png)
+
+Pour cette implémentation, le nuage de points représentant les erreurs montre une similarité marquée avec celui de Pi.java. Cependant, l’erreur médiane est plus élevée, à **5.32 × 10⁻⁵**, contre **2.71 × 10⁻⁵** pour Pi.java.
+
+Un point notable est que les valeurs de l’erreur et de l’approximation de π ont été relevées manuellement dans cette implémentation. Cela pourrait introduire des imprécisions dans les moyennes calculées, bien qu’il soit difficile d’en évaluer l’impact exact. Globalement, malgré une erreur légèrement supérieure, l’efficacité reste comparable à celle de Pi.java, et les variations observées sont probablement dues aux processus de mesure.
 
 ### C. Analyse/Conclusion
 
@@ -617,7 +653,7 @@ Nous avons fait des tests de performance sur tous les codes que nous avons vu ju
 
 Rappel : Assignment102 n'a pas pu réaliser les tests de scalabilité faible pour 100000000 de points par worker à cause d'un manque de mémoire.
 
-#### **Analyse**
+#### **Scalabilté forte**
 
 Dans le cas de la scalabilité forte (nombre total de points constant), nous avons observé les comportements suivants :
 
@@ -720,7 +756,7 @@ Voici les différentes étapes suivies pour mener à bien cette expérience :
 ![Schéma MW sur machines physiques](img/Schema_Memoire_Distribuee.png) 
 
 - Si les étapes précédentes ont été réalisées correctement, le Master arrive à envoyer des requêtes aux Workers, et les Workers arrivent à renvoyer leur résultat au Master.
-- On rappelle que chaque WorkerSocket utilise donc le code Pi.java sur les machines où ils sont exécutés. Pour le moment, on limite le nombre de Workers de Pi.java à 1, car on fera une deuxième expérience pour l'architecture Multi-Niveaux.
+- On rappelle que chaque WorkerSocket utilise donc le code Pi.java sur les machines où ils sont exécutés. Pour le moment, on limite le nombre de Workers de Pi.java à 1, car on fera une troisième expérience pour l'architecture Multi-Niveaux.
 
 #### 7. **Résultats :**
 
@@ -729,3 +765,75 @@ Voici les différentes étapes suivies pour mener à bien cette expérience :
 #### **Conclusion**
 
 Nous avons ainsi réussi à faire communiquer entre eux différents Workers avec leur Master, chacun sur des machines différentes et donc sur des mémoires différentes. On a ainsi véritablement fait de la programmation en mémoire distribuée, et il ne nous reste plus qu'à tester la programmation à multi-niveaux, qui sera le sujet de notre expérience suivante.
+
+### **B. Expérience mémoire distribuée avec plusieurs Workers par machine**
+
+Pour cette expérience, nous avons utilisé la majeure partie des ordinateurs de la salle G24, chaque machine configurée avec **un Worker par cœur**, soit **4 Workers par machine**. Un ordinateur distinct hébergeait le **MasterSocket**, chargé de coordonner les communications avec l’ensemble des **WorkerSockets**. Grâce à cette infrastructure, nous disposions d’un total de **48 cœurs** pour effectuer les calculs de π via la méthode Monte Carlo.
+
+![Schéma MW sur mémoire distribuée](img/Schema_Memoire_Distribuee_Multiple_Workers.png)
+
+En exploitant cette configuration, des tests de **scalabilité forte** et **scalabilité faible** ont été réalisés à une échelle nettement plus grande. Seuls les temps d’exécution ont été mesurés ici, car ils constituent la métrique principale de cette analyse.
+
+#### **Expériences de scalabilité forte**
+
+Les résultats des tests de scalabilité **forte**, répétés cinq fois pour calculer une moyenne, sont présentés ci-dessous :
+
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) |
+|-----------------|---------------|-----------------|------------------------|
+| 1               | 192,000,000   | 192,000,000     | 5,873                  |
+| 4               | 192,000,000   | 48,000,000      | 1,506                  |
+| 8               | 192,000,000   | 24,000,000      | 756                    |
+| 12              | 192,000,000   | 16,000,000      | 508                    |
+| 16              | 192,000,000   | 12,000,000      | 385                    |
+| 24              | 192,000,000   | 8,000,000       | 267                    |
+| 32              | 192,000,000   | 6,000,000       | 206                    |
+| 48              | 192,000,000   | 4,000,000       | 133                    |  
+
+La courbe du **speedup** résultant de ces données est présentée ci-dessous :
+
+![Scalabilité_forte_distribuée](plot/scalabilite_forte_MW%20sur%20machine_192000000.png)
+
+Les résultats montrent une excellente **scalabilité forte**. La courbe obtenue est presque linéaire et suit de très près le **speedup idéal**. Même avec **48 Workers**, l’écart avec la courbe idéale est inférieur à **5**. De plus, on observe une phase initiale **superlinéaire** au début de la courbe, où la courbe dépasse colle le speedup idéal avant de converger.
+
+#### **Expériences de scalabilité faible**
+
+Les résultats des tests de scalabilité **faible**, également répétés cinq fois pour obtenir une moyenne, sont présentés ci-dessous :
+
+| Nombre de cœurs | Points lancés | Points par cœur | Temps d'exécution (ms) |
+|-----------------|---------------|-----------------|------------------------|
+| 1               | 16,000,000    | 16,000,000      | 129                    |
+| 4               | 16,000,000    | 4,000,000       | 140                    |
+| 8               | 32,000,000    | 4,000,000       | 143                    |
+| 12              | 48,000,000    | 4,000,000       | 136                    |
+| 16              | 64,000,000    | 4,000,000       | 134                    |
+| 24              | 96,000,000    | 4,000,000       | 139                    |
+| 32              | 128,000,000   | 4,000,000       | 140                    |
+| 48              | 192,000,000   | 4,000,000       | 141                    |  
+
+La courbe du **speedup** résultant de ces données est présentée ci-dessous :
+
+![Scalabilité_forte_distribuée](plot/scalabilite_faible_MW%20sur%20machine_4000000.png)
+
+Les résultats montrent également une très bonne **scalabilité faible**. Bien que la courbe présente quelques fluctuations initiales, elle tend à se stabiliser autour de **0.9** pour des charges de calcul plus importantes. Cela signifie que l’augmentation proportionnelle du nombre total de points à calculer avec le nombre de cœurs entraîne des temps d’exécution presque constants, confirmant l’efficacité de cette approche.
+
+#### **Test d'efficacité (Effectiveness)**
+
+Lors de ces tests, seul le temps d’exécution a été mesuré. L’erreur de calcul n’a pas pu être directement évaluée. Toutefois, pour les plus grands nombres de points traités, l’erreur observée était approximativement de l’ordre de **10⁻⁷**, indiquant une précision assez importante.
+
+---
+
+### **C. Expérience multi-niveaux**
+
+L’ultime expérience consistait en une approche **multi-niveaux**. Contrairement à l’expérience précédente, chaque machine hébergeait un **WorkerSocket unique**, mais celui-ci contrôlait plusieurs Workers locaux sur **Pi.java**, soit 4 Workers au total en mémoire partagée. Ainsi, un **MasterSocket** communiquait avec les **WorkerSockets** (mémoire distribuée), et chaque WorkerSocket gérait ses propres Workers internes (mémoire partagée).
+
+![Schéma MW multi-niveaux](img/Schema_MW_Multi-Niveaux.png)
+
+Cette configuration a permis d’améliorer significativement les performances, comme le montrent les résultats ci-dessous :
+
+| Total Machines | Machines Master | Machines Worker | Points lancés | Points par Master | Points par Worker | Nombre de cœurs | Temps d'exécution (ms) |
+|----------------|-----------------|-----------------|---------------|-------------------|-------------------|-----------------|------------------------|
+| 16             | 4               | 16              | 192,000,000   | 48,000,000        | 12,000,000        | 16              | 106                    |
+| 32             | 8               | 32              | 192,000,000   | 24,000,000        | 6,000,000         | 32              | 60                     |
+| 48             | 12              | 48              | 192,000,000   | 16,000,000        | 4,000,000         | 48              | 44                     |  
+
+Malgré le temps limité pour effectuer davantage de tests, ces résultats démontrent clairement une amélioration significative des temps d’exécution par rapport à l’approche précédente, qui utilisait **4 WorkerSockets par machine**.
