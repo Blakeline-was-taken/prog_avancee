@@ -602,3 +602,15 @@ Nous avons abordé ces questions en observant la relation entre le nombre de poi
 Cette corrélation a été vérifiée pour tous les codes testés. Une augmentation du nombre de points entraîne systématiquement une amélioration de la précision.
 
 Ainsi, pour évaluer l’**Effectiveness**, il suffit de définir une valeur seuil arbitraire pour laquelle l’erreur doit être inférieure. Ce seuil représente le niveau de précision attendu.  
+
+## Conclusion
+
+Il est essentiel de bien choisir cette valeur, car selon la précision souhaitée, le nombre de machines nécessaires variera. Par exemple, si l'on veut calculer Pi avec une précision de $10^{-12}$, le code pourrait théoriquement y parvenir, mais cela nécessiterait des centaines, voire des milliers de machines. À ce stade, on pourrait se demander si cela en vaut vraiment la peine.
+
+Il est donc important de rester raisonnable. Imaginons que nous visons une précision de $10^{-7}$.
+
+Ce niveau de précision a été atteint avec l'**architecture multi-niveaux**, même dès l'utilisation de 24 cœurs au total. Ainsi, nous pouvons dire que les spécifications peuvent être remplies, sous réserve d'utiliser cette architecture avec un minimum de 24 cœurs.
+
+Cependant, si l'on cherche à atteindre une précision plus fine, le nombre de cœurs nécessaire augmentera inévitablement. Et ce, de manière exponentielle.
+
+En conclusion, l'architecture est adaptée pour des précisions faibles (inférieures à $10^{-8}$), mais elle devient inadaptée lorsque l'on tente d'atteindre des précisions plus élevées.

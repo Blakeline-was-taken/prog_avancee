@@ -830,10 +830,24 @@ L’ultime expérience consistait en une approche **multi-niveaux**. Contraireme
 
 Cette configuration a permis d’améliorer significativement les performances, comme le montrent les résultats ci-dessous :
 
-| Total Machines | Machines Master | Machines Worker | Points lancés | Points par Master | Points par Worker | Nombre de cœurs | Temps d'exécution (ms) |
-|----------------|-----------------|-----------------|---------------|-------------------|-------------------|-----------------|------------------------|
-| 16             | 4               | 16              | 192,000,000   | 48,000,000        | 12,000,000        | 16              | 106                    |
-| 32             | 8               | 32              | 192,000,000   | 24,000,000        | 6,000,000         | 32              | 60                     |
-| 48             | 12              | 48              | 192,000,000   | 16,000,000        | 4,000,000         | 48              | 44                     |  
+| Total Machines | Coeurs utilisés / machine | Total de coeurs utilisés | Points lancés    | Points par Machine | Points par Worker | Temps d'exécution (ms) |
+|----------------|---------------------------|--------------------------|------------------|--------------------|-------------------|------------------------|
+| 12             | 1                         | 12                       | 192,000,000      | 16,000,000         | 12,000,000        | 106                    |
+| 12             | 2                         | 24                       | 192,000,000      | 16,000,000         | 6,000,000         | 60                     |
+| 12             | 4                         | 48                       | 192,000,000      | 16,000,000         | 4,000,000         | 44                     |  
 
 Malgré le temps limité pour effectuer davantage de tests, ces résultats démontrent clairement une amélioration significative des temps d’exécution par rapport à l’approche précédente, qui utilisait **4 WorkerSockets par machine**.
+
+## **VIII. Ce code répond-il aux spécifications ?**
+
+Les spécifications initiales sont simplement de "calculer pi", mais cette formulation est trop vague. Dans le rapport de **Qualité de Développement**, il a été souligné qu'une spécification plus précise consisterait à définir une **précision minimale** à atteindre ou un **seuil d'erreur** à ne pas dépasser.
+
+Il est essentiel de bien choisir cette valeur, car selon la précision souhaitée, le nombre de machines nécessaires variera. Par exemple, si l'on veut calculer Pi avec une précision de $10^{-12}$, le code pourrait théoriquement y parvenir, mais cela nécessiterait des centaines, voire des milliers de machines. À ce stade, on pourrait se demander si cela en vaut vraiment la peine.
+
+Il est donc important de rester raisonnable. Imaginons que nous visons une précision de $10^{-7}$.
+
+Ce niveau de précision a été atteint avec l'**architecture multi-niveaux**, même dès l'utilisation de 24 cœurs au total. Ainsi, nous pouvons dire que les spécifications peuvent être remplies, sous réserve d'utiliser cette architecture avec un minimum de 24 cœurs.
+
+Cependant, si l'on cherche à atteindre une précision plus fine, le nombre de cœurs nécessaire augmentera inévitablement. Et ce, de manière exponentielle.
+
+En conclusion, l'architecture est adaptée pour des précisions faibles (inférieures à $10^{-8}$), mais elle devient inadaptée lorsque l'on tente d'atteindre des précisions plus élevées.
