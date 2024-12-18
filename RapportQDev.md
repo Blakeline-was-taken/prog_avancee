@@ -152,7 +152,7 @@ Les mesures de satisfaction évaluent le degré de plaisir, de confort et d'acce
 
 ## Évaluation d'un code parallèle
 
-Dans cette partie, nous allons lier ce rapport à celui de Programmation Avancée. Le but va être d'évaluer l'efficacité des codes parallèles que nous avons étudiés dans cette matière.
+Dans cette partie, nous allons lier ce rapport à celui de Programmation Avancée. Le but va être d'évaluer l'efficacité des codes parallèles que nous avons étudiés dans cette matière, aussi bien en terme d'Effectiveness que d'Efficiency.
 
 Pour cela, nous allons les tester avec différents nombres de points à tester et de processeurs à lancer. Et nous allons évaluer le temps d'exécution de chaque code par rapport au temps idéal.
 
@@ -556,42 +556,49 @@ Lors de ces tests, seul le temps d’exécution a été mesuré. L’erreur de c
 
 #### **Efficiency**
 
-La scalabilité faible et la scalabilité forte, bien qu'utiles, ne sont pas renseignées dans les normes ISO mentionnées. La raison pour laquelle on les a faites était afin d'évaluer l'Efficiency du code.
+Bien que la **scalabilité faible** et la **scalabilité forte** soient des indicateurs intéressants, elles ne sont pas explicitement mentionnées dans les normes ISO étudiées. Nous les avons néanmoins utilisées comme outils d’évaluation pour mesurer l'**Efficiency** du code.
 
-On va se baser sur la norme ISO 25022, qui définit deux **Efficiency Measures** que l'on va utiliser.
+Nous nous basons sur la norme **ISO 25022**, qui définit deux mesures d'efficacité pertinentes :
 
-| Name      | ID  | Measurement function and QMEs |
-|-----------|-----|-------------------------------|
-| Time      | EY- | X = T_t/T_a                   |
-| Task Time | G-1 | X = T_t - T_a/T_t             |
+| Name      | ID   | Measurement function and QMEs |
+|-----------|------|-------------------------------|
+| Time      | EY-  | $X = \frac{T_t}{T_a}$         |
+| Task Time | G-1  | $X = \frac{T_t - T_a}{T_t}$   |  
 
-Avec T_t = temps cible et T_a = Temps réel.
+Où $T_t$ correspond au **temps cible**, et $T_a$ au **temps réel**. Ces métriques permettent de comparer le temps d’exécution mesuré avec un temps idéal.
 
-Ce sont des mesures qui visent à comparer le temps d'exécution du code avec le temps qu'on aimerait viser.
+Dans le contexte des **codes parallèles**, la métrique **EY-** peut être directement comparée au **speedup**. Deux approches sont possibles pour cette comparaison :
 
-Les codes que l'on a évalués étant des codes parallèles, on peut comparer la métrique EY- avec la métrique du Speedup. Pour cela, on a 2 possibilités :
+1. **Comparaison avec un code séquentiel** :
+    - $T_t = T_1$ (temps séquentiel)
+    - $T_a = T_p$ (temps parallèle mesuré)  
+      Ici, on évalue la courbe classique du speedup.
 
-1. On compare notre code parallèle au code séquentiel, auquel cas, on évalue la courbe du speedup :
-   - T_t = T_1
-   - T_a = T_p
-2. On considère un parallèlisme idéal (cible), auquel cas, on évalue l'écart à la courbe du speedup :
-   - T_t = T_p (temps idéal)
-   - T_a = ^T_p (temps d'exécution sur p processus mesurés)
+2. **Comparaison avec un parallélisme idéal** :
+    - $T_t = T_p^\text{idéal} = \frac{T_1}{p}$ (temps idéal avec $p$ processeurs)
+    - $T_a = T_p$ (temps mesuré avec $p$ processeurs)  
+      Cette méthode mesure l’écart à un parallélisme idéal.
 
-Dans notre cas, on a poursuivi la deuxième possibilité. On peut donc facilement remplacer T_t par le temps mis par 1 processeur (T_1 / p), et T_a par le temps réel (T_p) avec p le nombre de processeurs évalué.
+Dans notre cas, nous avons opté pour la **deuxième possibilité**. Ainsi, $T_t$ est remplacé par $\frac{T_1}{p}$ (temps séquentiel divisé par le nombre de processeurs), et $T_a$ correspond au **temps réel mesuré** $T_p$.
 
-On va donc utiliser cette mesure pour évaluer l'efficacité (Efficiency) du code : Sp = (T_1/p) / T_p
+La formule utilisée pour évaluer l'efficacité est donc :  
+$$Sp = \frac{T_1 / p}{T_p}$$
 
-Quant à la mesure G-1, on peut utiliser 1 - (p / Sp). Elle permet de nous donner un "pourcentage d'efficacité".
+En complément, la métrique **G-1** peut être calculée à l’aide de :  
+$$G_1 = 1 - \frac{p}{Sp}$$  
+Celle-ci exprime un pourcentage d’efficacité.
 
-Le speedup, c'est justement ce que l'on a évalué dans les tests de scalabilité forte et de scalabilité faible. Ces tests sont donc conforme avec la norme ISO.
+Le **speedup** obtenu lors des tests de **scalabilité forte** et de **scalabilité faible** valide donc ces mesures, et ces tests sont conformes à la norme **ISO 25022**.
 
 #### **Effectiveness**
 
-Cette métrique est un peu plus compliquée à évaluer, car "Calculer Pi" est difficile à évaluer. À quelle précision ? En combien de temps ? Comment mesurer cette métrique ?
+La mesure de l’**Effectiveness** est plus complexe à définir dans notre contexte, car l’objectif "Calculer π" soulève plusieurs questions :
+- À quel degré de précision ?
+- Dans quel délai ?
+- Quelle méthode adopter pour mesurer cette métrique ?
 
-Et bien, on l'a vu, il nous a suffit de voir comment varie l'erreur lorsque l'on augmente le nombre de points (aka quand on augmente la précision). + de points = - d'erreur 
+Nous avons abordé ces questions en observant la relation entre le nombre de points utilisés dans les calculs et l’erreur obtenue. Les résultats montrent une tendance constante : **plus de points = moins d’erreur**.
 
-Cette tendance s'est vérifiée dans tous les codes, plus de points voulait toujours dire plus de précision. 
+Cette corrélation a été vérifiée pour tous les codes testés. Une augmentation du nombre de points entraîne systématiquement une amélioration de la précision.
 
-Ainsi, il nous suffit de définir une valeur arbitraire pour laquelle on veut que l'erreur soit en dessous. 
+Ainsi, pour évaluer l’**Effectiveness**, il suffit de définir une valeur seuil arbitraire pour laquelle l’erreur doit être inférieure. Ce seuil représente le niveau de précision attendu.  
